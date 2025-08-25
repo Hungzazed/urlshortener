@@ -55,5 +55,9 @@ app.get("/:code", async (req, res) => {
   res.redirect(link.originalUrl);
 });
 
+app.get("/", async (req, res) =>{
+  res.send("Welcome to URL Shortener Service");
+})
+
 // 🔹 Chạy server
 app.listen(3000, () => console.log("🚀 Server running at http://localhost:3000"));
