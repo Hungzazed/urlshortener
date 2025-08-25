@@ -1,9 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
 require("dotenv").config();
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 mongoose.connect(process.env.DB_URL);
 
@@ -60,4 +62,6 @@ app.get("/", async (req, res) =>{
 })
 
 // 🔹 Chạy server
-app.listen(3000, () => console.log("🚀 Server running at http://localhost:3000"));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
