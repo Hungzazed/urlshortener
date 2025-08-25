@@ -1,0 +1,8 @@
+### Test POST
+POST http://localhost:3000/shorten
+Content-Type: application/json
+
+{
+  "url": "https://we.tl/t-HGdLZ6lThN",
+  "alias": "www"
+}
