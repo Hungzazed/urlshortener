@@ -7,6 +7,7 @@ const { google } = require("googleapis");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const axios = require("axios");
 
 const PORT = process.env.PORT || 3000;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
@@ -171,22 +172,63 @@ app.post("/upload", (req, res, next) => {
     const media = { mimeType: file.mimetype, body: fs.createReadStream(file.path) };
     let filePath;
     try {
-      const response = await drive.files.create({
-        resource: fileMetadata,
-        media: media,
-        fields: "id",
-      });
-      filePath = response.data.id;
+      // 1. Lấy resumable session URI từ Google Drive
+      const accessToken = oauth2Client.credentials.access_token; // Lấy access_token từ oauth2Client
+      const fileName = `${Date.now()}-${file.originalname}`;
+      const mimeType = file.mimetype;
 
+      const res1 = await axios({
+        method: "POST",
+        url: "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        data: JSON.stringify({
+          name: fileName,
+          mimeType: mimeType,
+        }),
+      });
+      const location = res1.headers.location; // Resumable session URI
+
+      // 2. Đọc file và chia thành chunks
+      const data = await fs.promises.readFile(file.path);
+      const fileSize = data.length;
+      const chunkSize = 2 * 256 * 1024; // 512KB per chunk, có thể tăng nếu cần
+      const chunks = [];
+      for (let i = 0; i < fileSize; i += chunkSize) {
+        chunks.push(data.subarray(i, i + chunkSize));
+      }
+
+      // 3. Upload từng chunk
+      let start = 0;
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const end = start + chunk.length - 1;
+        const res2 = await axios({
+          method: "PUT",
+          url: location,
+          headers: {
+            "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          },
+          data: chunk,
+        });
+        if (res2.status === 200 || res2.status === 201) {
+          filePath = res2.data.id; // Lấy ID file khi hoàn tất
+        }
+        start = end + 1;
+      }
+
+      // Thiết lập quyền truy cập công khai
       await drive.permissions.create({
         fileId: filePath,
         requestBody: {
           role: 'reader',
-          type: 'anyone', 
+          type: 'anyone',
         },
       });
 
-      await fs.promises.unlink(file.path);
+      await fs.promises.unlink(file.path); // Xóa file tạm
     } catch (err) {
       console.error(err);
       await fs.promises.unlink(file.path).catch(console.error);
@@ -234,7 +276,7 @@ app.get("/:code", async (req, res) => {
   }
 });
 
-app.get("/", async (req, res) =>{
+app.get("/", async (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 })
 
