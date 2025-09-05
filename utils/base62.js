@@ -1,13 +1,14 @@
-const BASE62 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const BASE = ALPHABET.length;
 
 function encodeBase62(num) {
-  if (num === 0) return BASE62[0];
-  let result = '';
+  if (num === 0) return "0";
+  let s = "";
   while (num > 0) {
-    result = BASE62[num % 62] + result;
-    num = Math.floor(num / 62);
+    s = ALPHABET[num % BASE] + s;
+    num = Math.floor(num / BASE);
   }
-  return result;
+  return s.padStart(7, "0");
 }
 
 module.exports = { encodeBase62 };

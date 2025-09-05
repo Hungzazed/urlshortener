@@ -1,4 +1,3 @@
-// Hàm validate URL
 function isValidUrl(url) {
   try {
     new URL(url);
@@ -7,5 +6,4 @@ function isValidUrl(url) {
     return false;
   }
 }
-
 module.exports = { isValidUrl };
