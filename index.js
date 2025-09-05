@@ -10,6 +10,7 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
 // 🔹 API tạo link ngắn với custom alias
 app.post("/shorten", async (req, res) => {
@@ -71,7 +72,7 @@ app.get("/:code", async (req, res) => {
 });
 
 app.get("/", async (req, res) =>{
-  res.send("Welcome to URL Shortener Service");
+  res.sendFile(__dirname + '/public/index.html');
 })
 
 // 🔹 Chạy server
