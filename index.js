@@ -130,7 +130,47 @@ app.post("/shorten", async (req, res) => {
   }
 });
 
-// 🔹 API upload file
+async function uploadChunk(location, chunk, start, fileSize, retries = 3, delay = 1000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const end = start + chunk.length - 1;
+      const res = await axios({
+        method: "PUT",
+        url: location,
+        headers: {
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        },
+        data: chunk,
+        validateStatus: status => (status >= 200 && status < 300) || status === 308,
+      });
+      if (res.status === 200 || res.status === 201) {
+        return { status: res.status, data: res.data }; // Upload hoàn tất
+      } else if (res.status === 308) {
+        const range = res.headers.range; // Ví dụ: "bytes=0-524287"
+        if (range) {
+          const receivedEnd = parseInt(range.split("-")[1]);
+          if (receivedEnd >= end) {
+            console.log(`Chunk ${start}-${end} uploaded successfully`);
+            return { status: 308 }; // Chunk được nhận, tiếp tục
+          } else {
+            throw new Error(`Incomplete upload for chunk ${start}-${end}, received ${range}`);
+          }
+        }
+        return { status: 308 }; // Không có Range header, giả sử chunk được nhận
+      }
+    } catch (err) {
+      if (err.response && err.response.status === 429) {
+        console.warn(`Rate limit hit, retrying (${attempt}/${retries}) after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+      } else if (attempt === retries) {
+        throw err; // Ném lỗi nếu hết số lần thử
+      }
+    }
+  }
+}
+
+// API upload file
 app.post("/upload", (req, res, next) => {
   upload(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
@@ -168,12 +208,10 @@ app.post("/upload", (req, res, next) => {
       ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    const fileMetadata = { name: `${Date.now()}-${file.originalname}` };
-    const media = { mimeType: file.mimetype, body: fs.createReadStream(file.path) };
     let filePath;
     try {
       // 1. Lấy resumable session URI từ Google Drive
-      const accessToken = oauth2Client.credentials.access_token; // Lấy access_token từ oauth2Client
+      const accessToken = oauth2Client.credentials.access_token;
       const fileName = `${Date.now()}-${file.originalname}`;
       const mimeType = file.mimetype;
 
@@ -189,14 +227,14 @@ app.post("/upload", (req, res, next) => {
           mimeType: mimeType,
         }),
       });
-      const location = res1.headers.location; // Resumable session URI
+      const location = res1.headers.location;
 
       // 2. Đọc file và chia thành chunks
       const data = await fs.promises.readFile(file.path);
-      const fileSize = data.length;
-      const chunkSize = 2 * 256 * 1024; // 512KB per chunk, có thể tăng nếu cần
+      const totalFileSize = data.length;
+      const chunkSize = 2 * 256 * 1024; // 512KB per chunk
       const chunks = [];
-      for (let i = 0; i < fileSize; i += chunkSize) {
+      for (let i = 0; i < totalFileSize; i += chunkSize) {
         chunks.push(data.subarray(i, i + chunkSize));
       }
 
@@ -204,19 +242,16 @@ app.post("/upload", (req, res, next) => {
       let start = 0;
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        const end = start + chunk.length - 1;
-        const res2 = await axios({
-          method: "PUT",
-          url: location,
-          headers: {
-            "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-          },
-          data: chunk,
-        });
+        const res2 = await uploadChunk(location, chunk, start, totalFileSize);
         if (res2.status === 200 || res2.status === 201) {
           filePath = res2.data.id; // Lấy ID file khi hoàn tất
+          break; // Thoát vòng lặp khi upload xong
         }
-        start = end + 1;
+        start += chunk.length;
+      }
+
+      if (!filePath) {
+        throw new Error("Upload incomplete: No file ID received");
       }
 
       // Thiết lập quyền truy cập công khai
@@ -228,11 +263,11 @@ app.post("/upload", (req, res, next) => {
         },
       });
 
-      await fs.promises.unlink(file.path); // Xóa file tạm
+      await fs.promises.unlink(file.path);
     } catch (err) {
-      console.error(err);
+      console.error("Upload error:", err);
       await fs.promises.unlink(file.path).catch(console.error);
-      return res.status(500).json({ error: "Lỗi upload file lên Google Drive" });
+      return res.status(500).json({ error: "Lỗi upload file lên Google Drive: " + err.message });
     }
 
     const newLink = new Link({
