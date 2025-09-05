@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Shortener</title>
+    <title>URL Shortener & File Upload</title>
     <style>
         * {
             margin: 0;
@@ -13,70 +13,116 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5f6fa 0%, #ddd6fe 100%);
             min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 20px;
+            align-items: center;
         }
 
         .container {
             background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
             text-align: center;
+            padding: 30px 20px;
         }
 
-        h1 {
-            color: #333;
+        .header h1 {
+            font-size: 2.5em;
             margin-bottom: 10px;
-            font-size: 2.5rem;
-            font-weight: 700;
         }
 
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1rem;
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 20px;
+            background: none;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #6c757d;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #6c757d;
+            border-bottom: 3px solid #6c757d;
+        }
+
+        .tab-button:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .tab-button.active:hover {
+            background: white;
+            color: #6c757d;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .form-group {
-            margin-bottom: 20px;
-            text-align: left;
+            margin-bottom: 25px;
         }
 
-        label {
+        .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
             font-weight: 600;
+            color: #495057;
         }
 
-        input[type="url"], input[type="text"] {
+        .form-control {
             width: 100%;
             padding: 15px;
-            border: 2px solid #e1e5e9;
+            border: 2px solid #e9ecef;
             border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-            outline: none;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
         }
 
-        input[type="url"]:focus, input[type="text"]:focus {
-            border-color: #667eea;
+        .form-control:focus {
+            outline: none;
+            border-color: #6c757d;
+            box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.15);
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
             color: white;
-            padding: 15px 30px;
             border: none;
+            padding: 15px 30px;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 1.1em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -85,69 +131,69 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
         }
 
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
+        }
+
+        .drop-zone {
+            border: 3px dashed #6c757d;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .drop-zone.dragover {
+            background: #e9ecef;
+            border-color: #495057;
+        }
+
+        .drop-zone i {
+            font-size: 3em;
+            color: #6c757d;
+            margin-bottom: 15px;
         }
 
         .result {
-            margin-top: 30px;
+            margin-top: 25px;
             padding: 20px;
-            background: #f8f9fa;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
             border-radius: 10px;
-            border-left: 4px solid #667eea;
             display: none;
         }
 
-        .result.show {
-            display: block;
-        }
-
-        .short-url {
-            color: #667eea;
-            font-weight: 600;
-            word-break: break-all;
-            font-size: 18px;
-        }
-
-        .copy-btn {
-            background: #28a745;
-            padding: 8px 16px;
-            font-size: 14px;
-            margin-top: 10px;
-            width: auto;
-        }
-
-        .copy-btn:hover {
-            background: #218838;
-        }
-
-        .error {
-            color: #dc3545;
+        .result.error {
             background: #f8d7da;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            display: none;
+            border-color: #f5c6cb;
         }
 
-        .error.show {
-            display: block;
+        .result a {
+            color: #155724;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .result a:hover {
+            text-decoration: underline;
         }
 
         .loading {
             display: none;
-            margin-top: 20px;
+            text-align: center;
+            margin: 20px 0;
         }
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #6c757d;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -160,160 +206,305 @@
             100% { transform: rotate(360deg); }
         }
 
-        .features {
-            margin-top: 30px;
-            text-align: left;
+        .file-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+            border: 1px solid #e9ecef;
         }
 
-        .feature {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            color: #666;
-        }
-
-        .feature::before {
-            content: "✓";
-            color: #28a745;
-            font-weight: bold;
-            margin-right: 10px;
+        .file-info.show {
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔗 URL Shortener</h1>
-        <p class="subtitle">Transform your long URLs into short, shareable links</p>
-        
-        <form id="shortenForm">
-            <div class="form-group">
-                <label for="originalUrl">Enter your long URL:</label>
-                <input type="url" id="originalUrl" name="url" placeholder="https://example.com/very-long-url" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="alias">Custom alias (optional):</label>
-                <input type="text" id="alias" name="alias" placeholder="my-custom-link" pattern="[a-zA-Z0-9_-]+">
-                <small style="color: #666;">Only letters, numbers, underscore and dash allowed</small>
-            </div>
-            
-            <button type="submit" class="btn" id="submitBtn">
-                Shorten URL
+        <div class="header">
+            <h1>🔗 QuickLink</h1>
+            <p>Shorten URLs & Share Files Instantly</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('url')">
+                🔗 Shorten URL
             </button>
-        </form>
-
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Creating your short link...</p>
+            <button class="tab-button" onclick="switchTab('file')">
+                📁 Upload File
+            </button>
         </div>
 
-        <div class="error" id="error"></div>
+        <!-- URL Shortener Tab -->
+        <div id="url-tab" class="tab-content active">
+            <form id="url-form">
+                <div class="form-group">
+                    <label for="url">Enter your long URL:</label>
+                    <input type="url" id="url" class="form-control" placeholder="https://example.com/very-long-url" required>
+                </div>
+                <div class="form-group">
+                    <label for="alias">Custom alias (optional):</label>
+                    <input type="text" id="alias" class="form-control" placeholder="my-custom-link" pattern="[a-zA-Z0-9_-]+">
+                    <small style="color: #6c757d; margin-top: 5px; display: block;">Only letters, numbers, underscore and dash allowed</small>
+                </div>
+                <button type="submit" class="btn">Create Short Link</button>
+            </form>
 
-        <div class="result" id="result">
-            <h3>✅ Success!</h3>
-            <p>Your shortened URL:</p>
-            <div class="short-url" id="shortUrl"></div>
-            <button class="btn copy-btn" id="copyBtn">Copy to Clipboard</button>
+            <div class="loading" id="url-loading">
+                <div class="spinner"></div>
+                <p>Creating your short link...</p>
+            </div>
+
+            <div id="url-result" class="result"></div>
         </div>
 
-        <div class="features">
-            <h3>Features:</h3>
-            <div class="feature">No registration required</div>
-            <div class="feature">Custom aliases supported</div>
-            <div class="feature">Click tracking included</div>
-            <div class="feature">Fast and reliable</div>
+        <!-- File Upload Tab -->
+        <div id="file-tab" class="tab-content">
+            <form id="file-form">
+                <div class="form-group">
+                    <label>Upload your file:</label>
+                    <div class="drop-zone" id="drop-zone">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📁</div>
+                        <p><strong>Drag & drop your file here</strong></p>
+                        <p>or click to browse (Max: 20MB)</p>
+                        <input type="file" id="file" style="display: none;" accept="*/*">
+                    </div>
+                </div>
+
+                <div class="file-info" id="file-info">
+                    <strong>Selected file:</strong>
+                    <div id="file-details"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="file-alias">Custom alias (optional):</label>
+                    <input type="text" id="file-alias" class="form-control" placeholder="my-file-link" pattern="[a-zA-Z0-9_-]+">
+                    <small style="color: #6c757d; margin-top: 5px; display: block;">Only letters, numbers, underscore and dash allowed</small>
+                </div>
+
+                <button type="submit" class="btn" id="upload-btn" disabled>Upload & Share</button>
+            </form>
+
+            <div class="loading" id="file-loading">
+                <div class="spinner"></div>
+                <p>Uploading your file...</p>
+            </div>
+
+            <div id="file-result" class="result"></div>
         </div>
     </div>
 
     <script>
-        const form = document.getElementById('shortenForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const loading = document.getElementById('loading');
-        const result = document.getElementById('result');
-        const error = document.getElementById('error');
-        const shortUrl = document.getElementById('shortUrl');
-        const copyBtn = document.getElementById('copyBtn');
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Activate corresponding button
+            event.target.classList.add('active');
+            
+            // Clear results when switching tabs
+            clearResults();
+        }
 
-        form.addEventListener('submit', async (e) => {
+        // Clear all result messages
+        function clearResults() {
+            document.getElementById('url-result').style.display = 'none';
+            document.getElementById('file-result').style.display = 'none';
+            document.getElementById('url-loading').style.display = 'none';
+            document.getElementById('file-loading').style.display = 'none';
+        }
+
+        // URL Shortener functionality
+        document.getElementById('url-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(form);
-            const data = {
-                url: formData.get('url'),
-                alias: formData.get('alias') || undefined
-            };
-
-            // Reset states
-            result.classList.remove('show');
-            error.classList.remove('show');
-            loading.style.display = 'block';
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Processing...';
-
+            const urlInput = document.getElementById('url');
+            const aliasInput = document.getElementById('alias');
+            const resultDiv = document.getElementById('url-result');
+            const loadingDiv = document.getElementById('url-loading');
+            
+            // Clear previous results
+            resultDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            
             try {
                 const response = await fetch('/shorten', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify({
+                        url: urlInput.value,
+                        alias: aliasInput.value || undefined
+                    })
                 });
-
-                const responseData = await response.json();
-
+                
+                const data = await response.json();
+                loadingDiv.style.display = 'none';
+                
                 if (response.ok) {
-                    shortUrl.textContent = responseData.shortUrl;
-                    result.classList.add('show');
+                    resultDiv.className = 'result';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Success!</strong><br>
+                        Your short URL: <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a><br>
+                        <button onclick="copyToClipboard('${data.shortUrl}')" style="margin-top: 10px; padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Copy Link</button>
+                    `;
+                    resultDiv.style.display = 'block';
+                    
+                    // Reset form
+                    urlInput.value = '';
+                    aliasInput.value = '';
                 } else {
-                    throw new Error(responseData.error || 'Something went wrong');
+                    throw new Error(data.error || 'Failed to create short URL');
                 }
-            } catch (err) {
-                error.textContent = err.message;
-                error.classList.add('show');
-            } finally {
-                loading.style.display = 'none';
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Shorten URL';
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                resultDiv.style.display = 'block';
             }
         });
 
-        copyBtn.addEventListener('click', async () => {
+        // File upload functionality
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file');
+        const fileInfo = document.getElementById('file-info');
+        const fileDetails = document.getElementById('file-details');
+        const uploadBtn = document.getElementById('upload-btn');
+
+        // Click to browse files
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // File input change event
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            // Check file size (20MB limit)
+            if (file.size > 20 * 1024 * 1024) {
+                alert('File size must be less than 20MB');
+                return;
+            }
+            
+            // Show file info
+            fileDetails.innerHTML = `
+                <div>📄 ${file.name}</div>
+                <div>💾 ${(file.size / (1024 * 1024)).toFixed(2)} MB</div>
+            `;
+            fileInfo.classList.add('show');
+            uploadBtn.disabled = false;
+        }
+
+        // File upload form submission
+        document.getElementById('file-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file first');
+                return;
+            }
+            
+            const aliasInput = document.getElementById('file-alias');
+            const resultDiv = document.getElementById('file-result');
+            const loadingDiv = document.getElementById('file-loading');
+            
+            // Clear previous results
+            resultDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            
             try {
-                await navigator.clipboard.writeText(shortUrl.textContent);
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
-                copyBtn.style.background = '#28a745';
+                const formData = new FormData();
+                formData.append('file', file);
+                if (aliasInput.value) {
+                    formData.append('alias', aliasInput.value);
+                }
                 
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                    copyBtn.style.background = '#28a745';
-                }, 2000);
-            } catch (err) {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                loadingDiv.style.display = 'none';
+                
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Upload successful!</strong><br>
+                        Your file link: <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a><br>
+                        <strong>Expiration Date:</strong> ${data.expirationDate}<br>
+                        <button onclick="copyToClipboard('${data.shortUrl}')" style="margin-top: 10px; padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Copy Link</button>
+                    `;
+                    resultDiv.style.display = 'block';
+                    
+                    // Reset form
+                    fileInput.value = '';
+                    aliasInput.value = '';
+                    fileInfo.classList.remove('show');
+                    uploadBtn.disabled = true;
+                } else {
+                    throw new Error(data.error || 'Failed to upload file');
+                }
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                resultDiv.style.display = 'block';
+            }
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(() => {
                 // Fallback for older browsers
                 const textArea = document.createElement('textarea');
-                textArea.value = shortUrl.textContent;
+                textArea.value = text;
                 document.body.appendChild(textArea);
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = 'Copy to Clipboard';
-                }, 2000);
-            }
-        });
-
-        // Real-time alias validation
-        const aliasInput = document.getElementById('alias');
-        aliasInput.addEventListener('input', (e) => {
-            const value = e.target.value;
-            if (value && !/^[a-zA-Z0-9_-]+$/.test(value)) {
-                e.target.setCustomValidity('Only letters, numbers, underscore and dash allowed');
-            } else {
-                e.target.setCustomValidity('');
-            }
-        });
+                alert('Link copied to clipboard!');
+            });
+        }
     </script>
 </body>
 </html>
