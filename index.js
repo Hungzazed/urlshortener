@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const { PORT } = require("./config");
 const { oauth2Client } = require("./config");
+const { loadOrSetCredentials } = require("./utils/loadToken");
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.use((err, req, res, next) => {
   }
   next();
 });
+
+loadOrSetCredentials().catch(console.error);
 
 app.get("/auth/google/callback", async (req, res) => {
   const code = req.query.code;
